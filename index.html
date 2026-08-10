@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<script>
+/* LINE WebView 自動跳外部瀏覽器（沿用窩的家共用 snippet，避免 LINE 內建瀏覽器快取/cookie 限制） */
+(function () {
+  var ua = navigator.userAgent || '';
+  var isLine = /Line\//.test(ua);
+  var url = new URL(location.href);
+  var alreadyRedirected = url.searchParams.has('openExternalBrowser');
+  if (isLine && !alreadyRedirected) {
+    url.searchParams.set('openExternalBrowser', '1');
+    window.location.href = url.toString();
+  }
+})();
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>新人保溫箱進度追蹤・BNI華都更分會</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --warm:#E8732C; --warm-d:#C8581A; --warm-l:#FBEAD9;
+    --ink:#2B2118; --soft:#6B5D50; --line:#EADFD3;
+    --bg:#FFFBF5; --card:#FFFFFF; --green:#3F9B5A; --green-l:#E7F5EB;
+    --gold:#D9A441; --red:#D64545; --red-l:#FBEAEA;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+       background:var(--bg);color:var(--ink);line-height:1.6;font-size:16px;
+       -webkit-font-smoothing:antialiased;padding-bottom:60px}
+  .wrap{max-width:920px;margin:0 auto;padding:0 16px}
+  button{font-family:inherit;cursor:pointer;border:none}
+  input,select{font-family:inherit;font-size:16px}
+
+  /* Hero */
+  .hero{background:linear-gradient(135deg,#E8732C,#C8581A);color:#fff;
+        padding:36px 16px 44px;text-align:center;border-radius:0 0 28px 28px;
+        box-shadow:0 8px 24px rgba(200,88,26,.25)}
+  .hero .egg{font-size:44px;line-height:1}
+  .hero h1{font-size:24px;font-weight:900;margin:8px 0 4px}
+  .hero p{font-size:14px;opacity:.95}
+
+  /* stats */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:-26px}
+  .stat{background:var(--card);border-radius:16px;padding:14px 8px;text-align:center;
+        box-shadow:0 4px 14px rgba(0,0,0,.08)}
+  .stat .num{font-size:24px;font-weight:900;color:var(--warm-d)}
+  .stat .lab{font-size:12px;color:var(--soft);margin-top:2px}
+
+  /* toolbar */
+  .toolbar{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+  .toolbar .btns{display:flex;gap:10px;flex-wrap:wrap}
+  .btn{padding:12px 18px;border-radius:14px;font-weight:700;font-size:15px;display:inline-flex;align-items:center;gap:6px}
+  .btn-primary{background:var(--warm);color:#fff}
+  .btn-primary:active{background:var(--warm-d)}
+  .btn-outline{background:#fff;color:var(--warm-d);border:1.5px solid var(--warm)}
+  .btn-ghost{background:transparent;color:var(--soft);text-decoration:underline;padding:8px}
+  .identity{font-size:13px;color:var(--soft);background:#fff;border:1px solid var(--line);
+             border-radius:20px;padding:6px 14px;display:inline-flex;align-items:center;gap:6px}
+  .identity button{color:var(--warm-d);font-weight:700;text-decoration:underline;background:none}
+
+  /* section */
+  .section-title{font-size:17px;font-weight:800;margin:26px 0 10px;color:var(--warm-d);
+                  display:flex;align-items:center;gap:8px}
+  .empty{color:var(--soft);font-size:14px;background:#fff;border:1px dashed var(--line);
+         border-radius:14px;padding:26px;text-align:center}
+
+  /* member cards */
+  .card-list{display:grid;gap:12px}
+  .mcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;
+         box-shadow:0 2px 8px rgba(0,0,0,.04);text-align:left;width:100%}
+  .mcard .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .mcard .name{font-size:17px;font-weight:800}
+  .mcard .meta{font-size:13px;color:var(--soft);margin-top:2px}
+  .badge{font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;flex:none;white-space:nowrap}
+  .badge.ing{background:var(--warm-l);color:var(--warm-d)}
+  .badge.grad{background:var(--green-l);color:var(--green)}
+  .badge.ready{background:var(--gold);color:#fff}
+  .pbar{margin-top:10px;height:10px;background:var(--warm-l);border-radius:6px;overflow:hidden}
+  .pbar .fill{height:100%;background:linear-gradient(90deg,var(--warm),var(--gold));border-radius:6px;transition:width .3s}
+  .pbar.done .fill{background:var(--green)}
+  .pct{font-size:12px;color:var(--soft);margin-top:4px;text-align:right}
+
+  /* overlay */
+  .overlay{position:fixed;inset:0;background:rgba(43,33,24,.5);z-index:50;
+           display:flex;align-items:flex-end;justify-content:center}
+  .overlay.hidden{display:none}
+  .sheet{background:var(--bg);width:100%;max-width:640px;max-height:92vh;overflow-y:auto;
+         border-radius:22px 22px 0 0;padding:20px 18px 32px}
+  @media(min-width:640px){.overlay{align-items:center}.sheet{border-radius:22px;max-height:88vh}}
+  .sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .sheet-head h2{font-size:19px;font-weight:900}
+  .close-x{font-size:22px;color:var(--soft);background:none;padding:4px 10px}
+
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:14px;font-weight:700;color:var(--soft);margin-bottom:6px}
+  .field input,.field select{width:100%;padding:12px 14px;border:1.5px solid var(--line);
+                              border-radius:12px;background:#fff}
+  .field input:focus,.field select:focus{outline:2px solid var(--warm);border-color:var(--warm)}
+  .form-actions{display:flex;gap:10px;margin-top:18px}
+  .form-actions .btn{flex:1;justify-content:center}
+  .form-msg{font-size:13px;color:var(--red);margin-top:6px;min-height:18px}
+
+  /* detail */
+  .grad-banner{background:linear-gradient(135deg,#3F9B5A,#2f7a45);color:#fff;border-radius:16px;
+               padding:18px;text-align:center;margin-bottom:16px}
+  .grad-banner h3{font-size:16px;font-weight:800;margin-bottom:10px}
+  .grad-banner .btn{background:#fff;color:var(--green);width:100%;justify-content:center}
+  .grad-done{background:var(--green-l);color:var(--green);border-radius:16px;padding:14px;
+             text-align:center;font-weight:700;margin-bottom:16px}
+
+  .stage{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:12px;overflow:hidden}
+  .stage-head{background:var(--warm-l);padding:10px 16px;display:flex;justify-content:space-between;
+              align-items:center;font-weight:800;font-size:14px;color:var(--warm-d)}
+  .stage-head .cnt{font-size:12px;font-weight:700;background:#fff;border-radius:10px;padding:2px 10px}
+  .item-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--line);
+            width:100%;text-align:left;background:#fff}
+  .item-row:active{background:var(--warm-l)}
+  .chk{flex:none;width:24px;height:24px;border-radius:7px;border:2px solid var(--line);
+       display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff}
+  .chk.on{background:var(--green);border-color:var(--green)}
+  .item-label{font-size:15px;flex:1}
+  .item-row.busy{opacity:.5}
+
+  .danger-zone{margin-top:22px;text-align:center}
+  .danger-zone button{color:var(--red);font-size:13px;text-decoration:underline;background:none}
+
+  .id-banner{background:var(--warm-l);border:1px solid var(--warm);border-radius:14px;
+             padding:14px 16px;margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .id-banner input{flex:1;min-width:140px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--warm)}
+
+  .loading,.err-box{text-align:center;color:var(--soft);padding:40px 20px}
+  .err-box{color:var(--red)}
+  .err-box button{margin-top:10px}
+
+  footer{text-align:center;color:var(--soft);font-size:12px;margin-top:40px;padding-top:16px;
+         border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="egg">🐣</div>
+  <h1>新人保溫箱進度追蹤</h1>
+  <p>陪每一位新人完成 4 次培訓＋5 個一對一，一起出保溫箱</p>
+</div>
+
+<div class="wrap">
+  <div class="stats">
+    <div class="stat"><div class="num" id="statTotal">–</div><div class="lab">目前人數</div></div>
+    <div class="stat"><div class="num" id="statIng">–</div><div class="lab">進行中</div></div>
+    <div class="stat"><div class="num" id="statGrad">–</div><div class="lab">已畢業</div></div>
+    <div class="stat"><div class="num" id="statPct">–</div><div class="lab">平均完成度</div></div>
+  </div>
+
+  <div id="idBanner" class="id-banner" style="display:none">
+    <span>👋 請問你是哪位導師／協調夥伴？（之後勾選會記錄是你做的）</span>
+    <input id="idInput" placeholder="輸入你的名字">
+    <button class="btn btn-primary" id="idSaveBtn">確定</button>
+  </div>
+
+  <div class="toolbar">
+    <div class="btns">
+      <button class="btn btn-primary" id="newMemberBtn">➕ 新增新會員</button>
+      <button class="btn btn-outline" id="exportBtn">📄 匯出報表</button>
+    </div>
+    <div class="identity" id="identityChip" style="display:none">
+      你是：<span id="identityName"></span>
+      <button id="changeIdentityBtn">更改</button>
+    </div>
+  </div>
+
+  <div id="mainArea">
+    <div class="loading">讀取中…</div>
+  </div>
+
+  <footer>BNI 華都更分會・新人保溫箱進度追蹤系統</footer>
+</div>
+
+<!-- 新增會員 -->
+<div class="overlay hidden" id="newMemberOverlay">
+  <div class="sheet">
+    <div class="sheet-head"><h2>新增新會員</h2><button class="close-x" data-close="newMemberOverlay">✕</button></div>
+    <form id="newMemberForm">
+      <div class="field"><label>姓名 *</label><input type="text" id="fName" required></div>
+      <div class="field"><label>專業別</label><input type="text" id="fProfession" placeholder="例如：房仲、保險、記帳士"></div>
+      <div class="field"><label>負責導師 *</label>
+        <input type="text" id="fMentor" list="mentorList" required placeholder="輸入負責這位新人的導師姓名">
+        <datalist id="mentorList"></datalist>
+      </div>
+      <div class="field"><label>宣誓日期 *</label><input type="date" id="fOathDate" required></div>
+      <div class="form-msg" id="newMemberMsg"></div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" data-close="newMemberOverlay">取消</button>
+        <button type="submit" class="btn btn-primary">建立檢核表</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 會員詳情 -->
+<div class="overlay hidden" id="detailOverlay">
+  <div class="sheet" id="detailSheet"></div>
+</div>
+
+<script>
+var GAS_EXEC_URL = 'https://script.google.com/macros/s/AKfycbyGvS9Ij70thZRn_7jgAMNZzskcSIjduZTMBiOqswEiz6P5-Mq7jtu-JeHC-8GEsoyJjQ/exec';
+var IDENTITY_KEY = 'warmbox_identity_v1';
+
+var state = { stages: [], items: [], members: [], progress: {}, itemsByStage: {} };
+
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+}); }
+
+function getIdentity(){ return localStorage.getItem(IDENTITY_KEY) || ''; }
+function setIdentity(name){ localStorage.setItem(IDENTITY_KEY, name); renderIdentityUI(); }
+
+function renderIdentityUI(){
+  var name = getIdentity();
+  document.getElementById('idBanner').style.display = name ? 'none' : 'flex';
+  document.getElementById('identityChip').style.display = name ? 'inline-flex' : 'none';
+  document.getElementById('identityName').textContent = name;
+}
+
+document.getElementById('idSaveBtn').onclick = function(){
+  var v = document.getElementById('idInput').value.trim();
+  if (v) setIdentity(v);
+};
+document.getElementById('changeIdentityBtn').onclick = function(){
+  var v = prompt('更改你的名字：', getIdentity());
+  if (v && v.trim()) setIdentity(v.trim());
+};
+
+function apiGet(action){
+  return fetch(GAS_EXEC_URL + '?action=' + encodeURIComponent(action) + '&_=' + Date.now(), { cache: 'no-store' })
+    .then(function(r){ return r.json(); });
+}
+function apiPost(payload){
+  return fetch(GAS_EXEC_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  }).then(function(r){ return r.json(); });
+}
+
+function loadAll(){
+  document.getElementById('mainArea').innerHTML = '<div class="loading">讀取中…</div>';
+  return apiGet('roster').then(function(res){
+    if (!res.ok) throw new Error(res.message || '讀取失敗');
+    state.stages = res.stages.sort(function(a,b){ return a.order - b.order; });
+    state.items = res.items.sort(function(a,b){ return a.order - b.order; });
+    state.members = res.members;
+    state.progress = res.progress;
+    state.itemsByStage = {};
+    state.items.forEach(function(it){
+      (state.itemsByStage[it.stageId] = state.itemsByStage[it.stageId] || []).push(it);
+    });
+    renderMentorList();
+    renderStats();
+    renderMemberList();
+  }).catch(function(e){
+    document.getElementById('mainArea').innerHTML =
+      '<div class="err-box">讀取失敗：' + esc(e.message) + '<br><button class="btn btn-outline" id="retryBtn">重新讀取</button></div>';
+    document.getElementById('retryBtn').onclick = loadAll;
+  });
+}
+
+function renderMentorList(){
+  var names = {};
+  state.members.forEach(function(m){ if (m.mentor) names[m.mentor] = true; });
+  document.getElementById('mentorList').innerHTML =
+    Object.keys(names).map(function(n){ return '<option value="' + esc(n) + '">'; }).join('');
+}
+
+function requiredItemIds(){
+  var stageTypeById = {};
+  state.stages.forEach(function(s){ stageTypeById[s.id] = s.type; });
+  return state.items.filter(function(it){
+    var t = stageTypeById[it.stageId];
+    return t === 'training' || t === 'oneonone';
+  }).map(function(it){ return it.id; });
+}
+
+function memberProgressCount(memberId){
+  var done = 0;
+  state.items.forEach(function(it){
+    var p = state.progress[memberId + '|' + it.id];
+    if (p && p.done) done++;
+  });
+  return { done: done, total: state.items.length };
+}
+
+function isEligible(memberId){
+  var req = requiredItemIds();
+  if (!req.length) return false;
+  return req.every(function(id){
+    var p = state.progress[memberId + '|' + id];
+    return p && p.done;
+  });
+}
+
+function renderStats(){
+  var total = state.members.length;
+  var ing = state.members.filter(function(m){ return m.status !== '已畢業'; });
+  var grad = state.members.filter(function(m){ return m.status === '已畢業'; });
+  var avgPct = 0;
+  if (ing.length) {
+    var sum = 0;
+    ing.forEach(function(m){
+      var c = memberProgressCount(m.id);
+      sum += c.total ? (c.done / c.total) : 0;
+    });
+    avgPct = Math.round((sum / ing.length) * 100);
+  }
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statIng').textContent = ing.length;
+  document.getElementById('statGrad').textContent = grad.length;
+  document.getElementById('statPct').textContent = ing.length ? (avgPct + '%') : '—';
+}
+
+function memberCard(m){
+  var c = memberProgressCount(m.id);
+  var pct = c.total ? Math.round((c.done / c.total) * 100) : 0;
+  var graduated = m.status === '已畢業';
+  var eligible = !graduated && isEligible(m.id);
+  var badge = graduated
+    ? '<span class="badge grad">🎓 已畢業</span>'
+    : (eligible ? '<span class="badge ready">✅ 可以畢業了</span>' : '<span class="badge ing">進行中</span>');
+  return (
+    '<button class="mcard" data-member="' + esc(m.id) + '">' +
+      '<div class="top">' +
+        '<div><div class="name">' + esc(m.name) + '</div>' +
+        '<div class="meta">' + esc(m.profession || '未填專業別') + '　｜　導師：' + esc(m.mentor) + '</div></div>' +
+        badge +
+      '</div>' +
+      '<div class="pbar' + (pct >= 100 ? ' done' : '') + '"><div class="fill" style="width:' + pct + '%"></div></div>' +
+      '<div class="pct">' + c.done + ' / ' + c.total + '（' + pct + '%）</div>' +
+    '</button>'
+  );
+}
+
+function renderMemberList(){
+  var ing = state.members.filter(function(m){ return m.status !== '已畢業'; });
+  var grad = state.members.filter(function(m){ return m.status === '已畢業'; });
+
+  var html = '';
+  html += '<div class="section-title">🐣 進行中（' + ing.length + '）</div>';
+  html += ing.length
+    ? '<div class="card-list">' + ing.map(memberCard).join('') + '</div>'
+    : '<div class="empty">目前沒有進行中的新人，按「➕ 新增新會員」開始追蹤</div>';
+
+  if (grad.length) {
+    html += '<div class="section-title">🎓 已畢業（' + grad.length + '）</div>';
+    html += '<div class="card-list">' + grad.map(memberCard).join('') + '</div>';
+  }
+
+  document.getElementById('mainArea').innerHTML = html;
+  document.querySelectorAll('.mcard').forEach(function(el){
+    el.onclick = function(){ openDetail(el.getAttribute('data-member')); };
+  });
+}
+
+function openDetail(memberId){
+  var m = state.members.find(function(x){ return x.id === memberId; });
+  if (!m) return;
+  var graduated = m.status === '已畢業';
+  var eligible = !graduated && isEligible(m.id);
+  var c = memberProgressCount(m.id);
+  var pct = c.total ? Math.round((c.done / c.total) * 100) : 0;
+
+  var html = '';
+  html += '<div class="sheet-head"><h2>' + esc(m.name) + '</h2><button class="close-x" data-close="detailOverlay">✕</button></div>';
+  html += '<div class="meta" style="margin-bottom:14px">' + esc(m.profession || '未填專業別') +
+          '　｜　導師：' + esc(m.mentor) + '　｜　宣誓：' + esc(m.oathDate) + '</div>';
+  html += '<div class="pbar' + (pct >= 100 ? ' done' : '') + '"><div class="fill" style="width:' + pct + '%"></div></div>';
+  html += '<div class="pct">整體完成 ' + c.done + ' / ' + c.total + '（' + pct + '%）</div>';
+
+  if (graduated) {
+    html += '<div class="grad-done">🎓 已於 ' + esc(m.gradDate) + ' 出保溫箱畢業</div>';
+  } else if (eligible) {
+    html += '<div class="grad-banner"><h3>🎉 已達成畢業條件（4 次培訓 ＋ 5 個一對一都完成了）</h3>' +
+            '<button class="btn" id="graduateBtn" data-member="' + esc(m.id) + '">🎓 標記出保溫箱畢業</button></div>';
+  }
+
+  state.stages.forEach(function(stage){
+    var items = state.itemsByStage[stage.id] || [];
+    if (!items.length) return;
+    var doneCnt = items.filter(function(it){
+      var p = state.progress[m.id + '|' + it.id];
+      return p && p.done;
+    }).length;
+    html += '<div class="stage">';
+    html += '<div class="stage-head"><span>' + esc(stage.name) +
+            (stage.passportPage && stage.passportPage !== '—' ? '（護照 ' + esc(stage.passportPage) + '）' : '') +
+            '</span><span class="cnt">' + doneCnt + '/' + items.length + '</span></div>';
+    items.forEach(function(it){
+      var p = state.progress[m.id + '|' + it.id];
+      var on = !!(p && p.done);
+      html += '<button class="item-row" data-item="' + esc(it.id) + '" data-member="' + esc(m.id) + '">' +
+              '<span class="chk' + (on ? ' on' : '') + '">' + (on ? '✓' : '') + '</span>' +
+              '<span class="item-label">' + esc(it.label) + '</span></button>';
+    });
+    html += '</div>';
+  });
+
+  html += '<div class="danger-zone"><button id="deleteMemberBtn" data-member="' + esc(m.id) + '">🗑 刪除這位會員（建錯了才用）</button></div>';
+
+  document.getElementById('detailSheet').innerHTML = html;
+  document.getElementById('detailOverlay').classList.remove('hidden');
+
+  document.querySelectorAll('#detailSheet .item-row').forEach(function(el){
+    el.onclick = function(){ toggleItem(el.getAttribute('data-member'), el.getAttribute('data-item')); };
+  });
+  var gradBtn = document.getElementById('graduateBtn');
+  if (gradBtn) gradBtn.onclick = function(){ doGraduate(gradBtn.getAttribute('data-member')); };
+  var delBtn = document.getElementById('deleteMemberBtn');
+  if (delBtn) delBtn.onclick = function(){ doDeleteMember(delBtn.getAttribute('data-member'), m.name); };
+}
+
+function toggleItem(memberId, itemId){
+  var editor = getIdentity();
+  if (!editor) { alert('請先在上方填你的名字，才能記錄是誰勾選的'); return; }
+  var key = memberId + '|' + itemId;
+  var current = !!(state.progress[key] && state.progress[key].done);
+  var next = !current;
+
+  var row = document.querySelector('#detailSheet .item-row[data-item="' + itemId + '"]');
+  if (row) row.classList.add('busy');
+
+  apiPost({ action: 'toggleItem', memberId: memberId, itemId: itemId, done: next, editor: editor })
+    .then(function(res){
+      if (!res.ok) { alert('存檔失敗：' + res.message); return; }
+      state.progress[key] = { done: next, date: '', editor: editor };
+      renderStats();
+      openDetail(memberId);
+      var idx = state.members.findIndex(function(m){ return m.id === memberId; });
+      if (idx >= 0) renderMemberListKeepScroll();
+    })
+    .catch(function(e){ alert('存檔失敗（網路或系統忙線）：' + e.message); })
+    .finally(function(){ if (row) row.classList.remove('busy'); });
+}
+
+function renderMemberListKeepScroll(){
+  renderMemberList();
+}
+
+function doGraduate(memberId){
+  var editor = getIdentity();
+  if (!editor) { alert('請先在上方填你的名字'); return; }
+  if (!confirm('確定要標記這位會員「出保溫箱畢業」嗎？畢業後請記得在大群公告、回報領導團隊。')) return;
+  apiPost({ action: 'graduate', memberId: memberId, editor: editor }).then(function(res){
+    if (!res.ok) { alert(res.message); return; }
+    return loadAll().then(function(){ openDetail(memberId); });
+  }).catch(function(e){ alert('操作失敗：' + e.message); });
+}
+
+function doDeleteMember(memberId, name){
+  if (!confirm('確定要刪除「' + name + '」嗎？這個人的所有勾選紀錄會一併刪除，無法復原（可從 Google 試算表的版本紀錄救回）。')) return;
+  apiPost({ action: 'deleteMember', memberId: memberId }).then(function(res){
+    if (!res.ok) { alert(res.message); return; }
+    document.getElementById('detailOverlay').classList.add('hidden');
+    return loadAll();
+  }).catch(function(e){ alert('刪除失敗：' + e.message); });
+}
+
+// 新增會員
+document.getElementById('newMemberBtn').onclick = function(){
+  document.getElementById('newMemberForm').reset();
+  document.getElementById('fOathDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('newMemberMsg').textContent = '';
+  document.getElementById('newMemberOverlay').classList.remove('hidden');
+};
+document.getElementById('newMemberForm').onsubmit = function(e){
+  e.preventDefault();
+  var payload = {
+    action: 'createMember',
+    name: document.getElementById('fName').value.trim(),
+    profession: document.getElementById('fProfession').value.trim(),
+    mentor: document.getElementById('fMentor').value.trim(),
+    oathDate: document.getElementById('fOathDate').value
+  };
+  if (!payload.name || !payload.mentor || !payload.oathDate) {
+    document.getElementById('newMemberMsg').textContent = '姓名、負責導師、宣誓日期為必填';
+    return;
+  }
+  apiPost(payload).then(function(res){
+    if (!res.ok) { document.getElementById('newMemberMsg').textContent = res.message; return; }
+    document.getElementById('newMemberOverlay').classList.add('hidden');
+    return loadAll();
+  }).catch(function(e){
+    document.getElementById('newMemberMsg').textContent = '建立失敗：' + e.message;
+  });
+};
+
+// 關閉 modal
+document.querySelectorAll('[data-close]').forEach(function(el){
+  el.onclick = function(){ document.getElementById(el.getAttribute('data-close')).classList.add('hidden'); };
+});
+
+// 匯出報表（前端直接從目前資料產生 CSV，不額外開後端端點）
+document.getElementById('exportBtn').onclick = function(){
+  var rows = [['姓名','專業別','負責導師','宣誓日期','狀態','已完成項目','總項目','完成度','畢業日期']];
+  state.members.forEach(function(m){
+    var c = memberProgressCount(m.id);
+    var pct = c.total ? Math.round((c.done / c.total) * 100) : 0;
+    rows.push([m.name, m.profession, m.mentor, m.oathDate, m.status, c.done, c.total, pct + '%', m.gradDate || '']);
+  });
+  var csv = '﻿' + rows.map(function(r){
+    return r.map(function(v){ return '"' + String(v).replace(/"/g,'""') + '"'; }).join(',');
+  }).join('\r\n');
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var a = document.createElement('a');
+  var d = new Date();
+  var stamp = d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+  a.href = URL.createObjectURL(blob);
+  a.download = '保溫箱進度報表_' + stamp + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+};
+
+renderIdentityUI();
+loadAll();
+</script>
+</body>
+</html>
