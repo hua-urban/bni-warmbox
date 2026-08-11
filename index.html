@@ -22,131 +22,211 @@
 <title>新人保溫箱進度追蹤・BNI華都更分會</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@500;700;900&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#C8102E">
 <style>
   :root{
-    --warm:#E8732C; --warm-d:#C8581A; --warm-l:#FBEAD9;
-    --ink:#2B2118; --soft:#6B5D50; --line:#EADFD3;
-    --bg:#FFFBF5; --card:#FFFFFF; --green:#3F9B5A; --green-l:#E7F5EB;
-    --gold:#D9A441; --red:#D64545; --red-l:#FBEAEA;
+    color-scheme:dark;
+    --red:#C8102E; --red-dark:#96081F; --red-light:#DB3B54; --red-bright:#F06478;
+    --red-tint-10:rgba(200,16,46,.10); --red-tint-16:rgba(200,16,46,.16); --red-tint-30:rgba(200,16,46,.30);
+    --gold:#C8A04F; --gold-deep:#8A6423;
+    --gold-tint-14:rgba(200,160,79,.14); --gold-tint-35:rgba(200,160,79,.35);
+    --bg:#111111; --surface:#1A1613; --surface-2:#231D17;
+    --hairline:rgba(255,255,255,.10); --hairline-strong:rgba(255,255,255,.22); --hairline-soft:rgba(255,255,255,.06);
+    --text:rgba(255,255,255,.94); --text-85:rgba(255,255,255,.85);
+    --text-70:rgba(255,255,255,.70); --text-55:rgba(255,255,255,.52);
+    --ink:#1A1A1A;
+    --radius-lg:16px; --radius-md:12px; --radius-sm:8px;
+    --ease-out:cubic-bezier(.23,1,.32,1);
   }
   *{box-sizing:border-box;margin:0;padding:0}
+  html,body{overflow-x:hidden;width:100%}
   body{font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
-       background:var(--bg);color:var(--ink);line-height:1.6;font-size:16px;
-       -webkit-font-smoothing:antialiased;padding-bottom:60px}
-  .wrap{max-width:920px;margin:0 auto;padding:0 16px}
-  button{font-family:inherit;cursor:pointer;border:none}
-  input,select{font-family:inherit;font-size:16px}
+       background:var(--bg);color:var(--text);line-height:1.6;font-size:16px;
+       -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+       padding-bottom:60px}
+  .wrap{max-width:960px;margin:0 auto;padding:0 16px}
+  button{font-family:inherit;cursor:pointer;border:none;background:none}
+  input,select{font-family:inherit;font-size:16px;color:var(--text);max-width:100%}
+  input::placeholder{color:var(--text-55);opacity:1}
+  ::selection{background:var(--red);color:#fff}
+
+  h1,h2,h3,.section-title,.mcard .name,.stage-head,.sheet-head h2,.grad-banner h3{
+    font-family:"Noto Serif TC","Noto Sans TC",serif;
+  }
 
   /* Hero */
-  .hero{background:linear-gradient(135deg,#E8732C,#C8581A);color:#fff;
-        padding:36px 16px 44px;text-align:center;border-radius:0 0 28px 28px;
-        box-shadow:0 8px 24px rgba(200,88,26,.25)}
-  .hero .egg{font-size:44px;line-height:1}
-  .hero h1{font-size:24px;font-weight:900;margin:8px 0 4px}
-  .hero p{font-size:14px;opacity:.95}
+  .hero{background:linear-gradient(160deg,var(--red) 0%,var(--red-dark) 100%);color:#fff;
+        padding:38px 16px 44px;text-align:center;border-radius:0 0 26px 26px}
+  .hero-badge{width:56px;height:56px;margin:0 auto 10px;border-radius:50%;
+        background:rgba(255,255,255,.12);border:1.5px solid rgba(200,160,79,.6);
+        display:flex;align-items:center;justify-content:center}
+  .crest{font-family:"Noto Serif TC","Noto Sans TC",serif;font-weight:900;font-size:24px;color:#fff;line-height:1}
+  .hero .kicker{font-size:12px;font-weight:700;letter-spacing:.12em;opacity:.85;margin-bottom:4px}
+  .hero h1{font-size:clamp(22px,5.5vw,26px);font-weight:900;margin:2px 0 6px;text-wrap:balance}
+  .hero p{font-size:14px;opacity:.92;overflow-wrap:break-word}
 
   /* stats */
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:-26px}
-  .stat{background:var(--card);border-radius:16px;padding:14px 8px;text-align:center;
-        box-shadow:0 4px 14px rgba(0,0,0,.08)}
-  .stat .num{font-size:24px;font-weight:900;color:var(--warm-d)}
-  .stat .lab{font-size:12px;color:var(--soft);margin-top:2px}
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:-26px}
+  @media(min-width:560px){.stats{grid-template-columns:repeat(4,1fr)}}
+  .stat{background:var(--surface);border-radius:var(--radius-md);padding:14px 6px;text-align:center;
+        border:1px solid var(--hairline);min-width:0}
+  .stat .num{font-family:"DM Mono","Noto Sans TC",monospace;font-size:22px;font-weight:700;color:var(--red-bright)}
+  .stat .lab{font-size:11.5px;color:var(--text-55);margin-top:3px;font-weight:500}
 
   /* toolbar */
-  .toolbar{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+  .toolbar{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;align-items:center;justify-content:space-between}
   .toolbar .btns{display:flex;gap:10px;flex-wrap:wrap}
-  .btn{padding:12px 18px;border-radius:14px;font-weight:700;font-size:15px;display:inline-flex;align-items:center;gap:6px}
-  .btn-primary{background:var(--warm);color:#fff}
-  .btn-primary:active{background:var(--warm-d)}
-  .btn-outline{background:#fff;color:var(--warm-d);border:1.5px solid var(--warm)}
-  .btn-ghost{background:transparent;color:var(--soft);text-decoration:underline;padding:8px}
-  .identity{font-size:13px;color:var(--soft);background:#fff;border:1px solid var(--line);
-             border-radius:20px;padding:6px 14px;display:inline-flex;align-items:center;gap:6px}
-  .identity button{color:var(--warm-d);font-weight:700;text-decoration:underline;background:none}
+  .btn{padding:12px 18px;min-height:44px;border-radius:var(--radius-md);font-weight:700;font-size:15px;
+       display:inline-flex;align-items:center;gap:6px;
+       transition:transform 160ms var(--ease-out),background 160ms var(--ease-out)}
+  .btn svg{flex:none}
+  .btn-primary{background:var(--red);color:#fff}
+  .btn-primary:hover{background:var(--red-dark)}
+  .btn-primary:active{transform:scale(.97)}
+  .btn-outline{background:transparent;color:var(--red-bright);border:1.5px solid var(--red-bright)}
+  .btn-outline:active{transform:scale(.97);background:var(--red-tint-10)}
+  .btn-ghost{background:transparent;color:var(--text-55);text-decoration:underline;padding:8px}
+  .identity{font-size:13px;color:var(--text-70);background:var(--surface);border:1px solid var(--hairline);
+             border-radius:20px;padding:7px 14px;display:inline-flex;align-items:center;gap:6px;min-width:0}
+  .identity button{color:var(--red-bright);font-weight:700;text-decoration:underline;background:none}
 
   /* section */
-  .section-title{font-size:17px;font-weight:800;margin:26px 0 10px;color:var(--warm-d);
-                  display:flex;align-items:center;gap:8px}
-  .empty{color:var(--soft);font-size:14px;background:#fff;border:1px dashed var(--line);
-         border-radius:14px;padding:26px;text-align:center}
+  .section-title{font-size:17px;font-weight:800;margin:26px 0 10px;color:var(--red-bright)}
+  .empty{color:var(--text-55);font-size:14px;background:var(--surface);border:1px dashed var(--hairline-strong);
+         border-radius:var(--radius-md);padding:26px;text-align:center;overflow-wrap:break-word}
 
   /* member cards */
   .card-list{display:grid;gap:12px}
-  .mcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;
-         box-shadow:0 2px 8px rgba(0,0,0,.04);text-align:left;width:100%}
+  .mcard{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius-lg);
+         padding:14px 16px;text-align:left;width:100%;
+         transition:border-color 160ms var(--ease-out)}
+  .mcard:active{border-color:var(--hairline-strong)}
   .mcard .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-  .mcard .name{font-size:17px;font-weight:800}
-  .mcard .meta{font-size:13px;color:var(--soft);margin-top:2px}
-  .badge{font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;flex:none;white-space:nowrap}
-  .badge.ing{background:var(--warm-l);color:var(--warm-d)}
-  .badge.grad{background:var(--green-l);color:var(--green)}
-  .badge.ready{background:var(--gold);color:#fff}
-  .pbar{margin-top:10px;height:10px;background:var(--warm-l);border-radius:6px;overflow:hidden}
-  .pbar .fill{height:100%;background:linear-gradient(90deg,var(--warm),var(--gold));border-radius:6px;transition:width .3s}
-  .pbar.done .fill{background:var(--green)}
-  .pct{font-size:12px;color:var(--soft);margin-top:4px;text-align:right}
+  .mcard-info{min-width:0;flex:1}
+  .mcard .name{font-size:16.5px;font-weight:700;color:var(--text)}
+  .meta{font-size:12.5px;color:var(--text-55);overflow-wrap:break-word;word-break:break-word}
+  .mcard .meta{margin-top:2px}
+  .badge{position:relative;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px;flex:none;white-space:nowrap}
+  .badge.ing{background:rgba(255,255,255,.10);color:var(--text-85)}
+  .badge.grad{background:var(--gold-deep);color:#fff}
+  .badge.ready{background:var(--gold);color:var(--ink)}
+  .badge.ready::after{content:'';position:absolute;inset:-3px;border-radius:inherit;
+        border:1.5px solid var(--gold);animation:readyGlow 2.4s var(--ease-out) infinite}
+  .pbar{margin-top:10px;height:8px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden}
+  .pbar .fill{height:100%;background:linear-gradient(90deg,var(--red-light),var(--red));border-radius:6px;
+              transition:width 350ms var(--ease-out)}
+  .pbar.done .fill{background:linear-gradient(90deg,var(--gold),var(--gold-deep))}
+  .pct{font-size:11.5px;color:var(--text-55);margin-top:4px;text-align:right;
+       font-family:"DM Mono","Noto Sans TC",monospace}
+
+  /* overview table (desktop only) */
+  .overview-wrap{display:none}
+  @media(min-width:880px){
+    .overview-wrap{display:block}
+    #mainArea{display:none}
+  }
+  .table-card{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius-lg);overflow:hidden;overflow-x:auto}
+  .ov-table{width:100%;border-collapse:collapse}
+  .ov-table th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--text-55);
+               padding:12px 16px;border-bottom:1px solid var(--hairline);white-space:nowrap}
+  .ov-table td{padding:12px 16px;font-size:14px;color:var(--text-85);border-top:1px solid var(--hairline-soft);
+               vertical-align:middle}
+  .ov-table tbody tr:first-child td{border-top:none}
+  .ov-table tbody tr{cursor:pointer;transition:background 120ms var(--ease-out)}
+  .ov-table tbody tr:hover{background:var(--red-tint-10)}
+  .ov-table .ov-name{font-family:"Noto Serif TC","Noto Sans TC",serif;font-weight:700;color:var(--text);white-space:nowrap}
+  .ov-table .pbar{margin-top:0;width:140px}
+  .ov-table .pct{text-align:left;margin-top:4px}
+  .empty-row td{text-align:center;color:var(--text-55);padding:30px 16px}
 
   /* overlay */
-  .overlay{position:fixed;inset:0;background:rgba(43,33,24,.5);z-index:50;
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:50;
            display:flex;align-items:flex-end;justify-content:center}
   .overlay.hidden{display:none}
-  .sheet{background:var(--bg);width:100%;max-width:640px;max-height:92vh;overflow-y:auto;
-         border-radius:22px 22px 0 0;padding:20px 18px 32px}
-  @media(min-width:640px){.overlay{align-items:center}.sheet{border-radius:22px;max-height:88vh}}
-  .sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-  .sheet-head h2{font-size:19px;font-weight:900}
-  .close-x{font-size:22px;color:var(--soft);background:none;padding:4px 10px}
+  .sheet{background:var(--surface);width:100%;max-width:640px;max-height:92vh;overflow-y:auto;
+         border-radius:22px 22px 0 0;padding:20px 18px 32px;
+         box-shadow:0 -8px 30px rgba(0,0,0,.45);
+         animation:sheetUp 280ms var(--ease-out)}
+  @media(min-width:640px){.overlay{align-items:center}.sheet{border-radius:18px;max-height:88vh;
+         box-shadow:0 20px 50px rgba(0,0,0,.5)}}
+  .sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px}
+  .sheet-head h2{font-size:19px;font-weight:900;min-width:0;overflow-wrap:break-word}
+  .close-x{font-size:20px;color:var(--text-55);background:none;padding:6px 10px;border-radius:8px;flex:none}
 
   .field{margin-bottom:14px}
-  .field label{display:block;font-size:14px;font-weight:700;color:var(--soft);margin-bottom:6px}
-  .field input,.field select{width:100%;padding:12px 14px;border:1.5px solid var(--line);
-                              border-radius:12px;background:#fff}
-  .field input:focus,.field select:focus{outline:2px solid var(--warm);border-color:var(--warm)}
+  .field label{display:block;font-size:14px;font-weight:700;color:var(--text-85);margin-bottom:6px}
+  .field input,.field select{width:100%;padding:12px 14px;border:1.5px solid var(--hairline-strong);
+                              border-radius:var(--radius-md);background:var(--surface-2)}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--red-bright);box-shadow:0 0 0 3px var(--red-tint-16)}
   .form-actions{display:flex;gap:10px;margin-top:18px}
   .form-actions .btn{flex:1;justify-content:center}
-  .form-msg{font-size:13px;color:var(--red);margin-top:6px;min-height:18px}
+  .form-msg{font-size:13px;color:var(--red-bright);margin-top:6px;min-height:18px}
 
   /* detail */
-  .grad-banner{background:linear-gradient(135deg,#3F9B5A,#2f7a45);color:#fff;border-radius:16px;
+  .grad-banner{background:var(--gold);color:var(--ink);border-radius:var(--radius-lg);
                padding:18px;text-align:center;margin-bottom:16px}
-  .grad-banner h3{font-size:16px;font-weight:800;margin-bottom:10px}
-  .grad-banner .btn{background:#fff;color:var(--green);width:100%;justify-content:center}
-  .grad-done{background:var(--green-l);color:var(--green);border-radius:16px;padding:14px;
-             text-align:center;font-weight:700;margin-bottom:16px}
+  .grad-banner h3{font-size:16px;font-weight:800;margin-bottom:10px;line-height:1.4}
+  .grad-banner .btn{background:var(--ink);color:#fff;width:100%;justify-content:center}
+  .grad-done{background:var(--gold-tint-14);color:var(--text);border:1px solid var(--gold-tint-35);
+             border-radius:var(--radius-md);padding:14px;text-align:center;font-weight:700;margin-bottom:16px}
 
-  .stage{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:12px;overflow:hidden}
-  .stage-head{background:var(--warm-l);padding:10px 16px;display:flex;justify-content:space-between;
-              align-items:center;font-weight:800;font-size:14px;color:var(--warm-d)}
-  .stage-head .cnt{font-size:12px;font-weight:700;background:#fff;border-radius:10px;padding:2px 10px}
-  .item-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--line);
-            width:100%;text-align:left;background:#fff}
-  .item-row:active{background:var(--warm-l)}
-  .chk{flex:none;width:24px;height:24px;border-radius:7px;border:2px solid var(--line);
-       display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff}
-  .chk.on{background:var(--green);border-color:var(--green)}
-  .item-label{font-size:15px;flex:1}
+  .stage{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius-lg);margin-bottom:12px;overflow:hidden}
+  .stage-head{background:var(--red-tint-16);padding:10px 16px;display:flex;justify-content:space-between;
+              align-items:center;font-weight:700;font-size:14px;color:var(--text);gap:8px}
+  .stage-head span:first-child{min-width:0;overflow-wrap:break-word}
+  .stage-head .cnt{font-size:11.5px;font-weight:700;background:var(--surface-2);border-radius:10px;
+                    padding:2px 10px;font-family:"DM Mono","Noto Sans TC",monospace;flex:none}
+  .item-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--hairline);
+            width:100%;text-align:left;background:var(--surface);transition:background 120ms var(--ease-out)}
+  .item-row:active{background:var(--red-tint-10)}
+  .chk{flex:none;width:24px;height:24px;border-radius:7px;border:2px solid var(--hairline-strong);
+       display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
+  .chk.on{background:var(--red);border-color:var(--red);animation:checkPop 260ms var(--ease-out)}
+  .item-label{font-size:14.5px;flex:1;min-width:0;overflow-wrap:break-word}
   .item-row.busy{opacity:.5}
 
+  @keyframes checkPop{0%{transform:scale(.6)}65%{transform:scale(1.14)}100%{transform:scale(1)}}
+  @keyframes readyGlow{
+    0%{transform:scale(1);opacity:.6}
+    70%{transform:scale(1.35);opacity:0}
+    100%{transform:scale(1.35);opacity:0}
+  }
+  @keyframes sheetUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
   .danger-zone{margin-top:22px;text-align:center}
-  .danger-zone button{color:var(--red);font-size:13px;text-decoration:underline;background:none}
+  .danger-zone button{color:var(--red-bright);font-size:13px;text-decoration:underline;background:none}
 
-  .id-banner{background:var(--warm-l);border:1px solid var(--warm);border-radius:14px;
+  .id-banner{background:var(--red-tint-16);border:1px solid var(--red-tint-30);border-radius:var(--radius-md);
              padding:14px 16px;margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .id-banner input{flex:1;min-width:140px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--warm)}
+  .id-banner span{overflow-wrap:break-word;min-width:0}
+  .id-banner input{flex:1 1 160px;min-width:0;padding:10px 12px;border-radius:var(--radius-sm);
+                    border:1.5px solid var(--red-tint-30);background:var(--surface-2);color:var(--text)}
 
-  .loading,.err-box{text-align:center;color:var(--soft);padding:40px 20px}
-  .err-box{color:var(--red)}
+  .loading,.err-box{text-align:center;color:var(--text-55);padding:40px 20px}
+  .err-box{color:var(--red-bright)}
   .err-box button{margin-top:10px}
 
-  footer{text-align:center;color:var(--soft);font-size:12px;margin-top:40px;padding-top:16px;
-         border-top:1px solid var(--line)}
+  footer{text-align:center;color:var(--text-55);font-size:12px;margin-top:40px;padding-top:16px;
+         border-top:1px solid var(--hairline);overflow-wrap:break-word}
+
+  button:focus-visible,input:focus-visible,select:focus-visible{
+    outline:2px solid var(--red-bright);outline-offset:2px}
+
+  @media(min-width:720px){
+    .card-list{grid-template-columns:repeat(2,1fr)}
+  }
+
+  @media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
 </style>
 </head>
 <body>
 
 <div class="hero">
-  <div class="egg">🐣</div>
+  <div class="hero-badge"><span class="crest">華</span></div>
+  <div class="kicker">BNI 華都更分會</div>
   <h1>新人保溫箱進度追蹤</h1>
   <p>陪每一位新人完成 4 次培訓＋5 個一對一，一起出保溫箱</p>
 </div>
@@ -160,19 +240,33 @@
   </div>
 
   <div id="idBanner" class="id-banner" style="display:none">
-    <span>👋 請問你是哪位導師／協調夥伴？（之後勾選會記錄是你做的）</span>
+    <span>請問你是哪位導師／協調夥伴？（之後勾選會記錄是你做的）</span>
     <input id="idInput" placeholder="輸入你的名字">
     <button class="btn btn-primary" id="idSaveBtn">確定</button>
   </div>
 
   <div class="toolbar">
     <div class="btns">
-      <button class="btn btn-primary" id="newMemberBtn">➕ 新增新會員</button>
-      <button class="btn btn-outline" id="exportBtn">📄 匯出報表</button>
+      <button class="btn btn-primary" id="newMemberBtn"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>新增新會員</button>
+      <button class="btn btn-outline" id="exportBtn"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1v8m0 0L5 6m3 3l3-3M2 11v2.5A1.5 1.5 0 003.5 15h9a1.5 1.5 0 001.5-1.5V11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>匯出報表</button>
     </div>
     <div class="identity" id="identityChip" style="display:none">
       你是：<span id="identityName"></span>
       <button id="changeIdentityBtn">更改</button>
+    </div>
+  </div>
+
+  <div class="overview-wrap">
+    <div class="section-title">總覽</div>
+    <div class="table-card">
+      <table class="ov-table">
+        <thead>
+          <tr><th>姓名</th><th>專業別</th><th>負責導師</th><th>宣誓日期</th><th>完成進度</th><th>狀態</th></tr>
+        </thead>
+        <tbody id="overviewTable">
+          <tr class="empty-row"><td colspan="6">讀取中…</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
@@ -265,6 +359,7 @@ function loadAll(){
     renderMentorList();
     renderStats();
     renderMemberList();
+    renderOverviewTable();
   }).catch(function(e){
     document.getElementById('mainArea').innerHTML =
       '<div class="err-box">讀取失敗：' + esc(e.message) + '<br><button class="btn btn-outline" id="retryBtn">重新讀取</button></div>';
@@ -331,13 +426,13 @@ function memberCard(m){
   var graduated = m.status === '已畢業';
   var eligible = !graduated && isEligible(m.id);
   var badge = graduated
-    ? '<span class="badge grad">🎓 已畢業</span>'
-    : (eligible ? '<span class="badge ready">✅ 可以畢業了</span>' : '<span class="badge ing">進行中</span>');
+    ? '<span class="badge grad">已畢業</span>'
+    : (eligible ? '<span class="badge ready">可以畢業了</span>' : '<span class="badge ing">進行中</span>');
   return (
     '<button class="mcard" data-member="' + esc(m.id) + '">' +
       '<div class="top">' +
-        '<div><div class="name">' + esc(m.name) + '</div>' +
-        '<div class="meta">' + esc(m.profession || '未填專業別') + '　｜　導師：' + esc(m.mentor) + '</div></div>' +
+        '<div class="mcard-info"><div class="name">' + esc(m.name) + '</div>' +
+        '<div class="meta">' + esc(m.profession || '未填專業別') + '　｜　導師：' + esc(m.mentor) + '　｜　宣誓：' + esc(m.oathDate) + '</div></div>' +
         badge +
       '</div>' +
       '<div class="pbar' + (pct >= 100 ? ' done' : '') + '"><div class="fill" style="width:' + pct + '%"></div></div>' +
@@ -351,19 +446,46 @@ function renderMemberList(){
   var grad = state.members.filter(function(m){ return m.status === '已畢業'; });
 
   var html = '';
-  html += '<div class="section-title">🐣 進行中（' + ing.length + '）</div>';
+  html += '<div class="section-title">進行中（' + ing.length + '）</div>';
   html += ing.length
     ? '<div class="card-list">' + ing.map(memberCard).join('') + '</div>'
-    : '<div class="empty">目前沒有進行中的新人，按「➕ 新增新會員」開始追蹤</div>';
+    : '<div class="empty">目前沒有進行中的新人，按「新增新會員」開始追蹤</div>';
 
   if (grad.length) {
-    html += '<div class="section-title">🎓 已畢業（' + grad.length + '）</div>';
+    html += '<div class="section-title">已畢業（' + grad.length + '）</div>';
     html += '<div class="card-list">' + grad.map(memberCard).join('') + '</div>';
   }
 
   document.getElementById('mainArea').innerHTML = html;
   document.querySelectorAll('.mcard').forEach(function(el){
     el.onclick = function(){ openDetail(el.getAttribute('data-member')); };
+  });
+}
+
+function renderOverviewTable(){
+  var el = document.getElementById('overviewTable');
+  if (!el) return;
+  var rows = state.members.map(function(m){
+    var c = memberProgressCount(m.id);
+    var pct = c.total ? Math.round((c.done / c.total) * 100) : 0;
+    var graduated = m.status === '已畢業';
+    var eligible = !graduated && isEligible(m.id);
+    var badge = graduated
+      ? '<span class="badge grad">已畢業</span>'
+      : (eligible ? '<span class="badge ready">可以畢業了</span>' : '<span class="badge ing">進行中</span>');
+    return '<tr data-member="' + esc(m.id) + '">' +
+      '<td class="ov-name">' + esc(m.name) + '</td>' +
+      '<td>' + esc(m.profession || '—') + '</td>' +
+      '<td>' + esc(m.mentor) + '</td>' +
+      '<td>' + esc(m.oathDate) + '</td>' +
+      '<td><div class="pbar' + (pct >= 100 ? ' done' : '') + '"><div class="fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="pct">' + c.done + ' / ' + c.total + '（' + pct + '%）</div></td>' +
+      '<td>' + badge + '</td>' +
+    '</tr>';
+  }).join('');
+  el.innerHTML = rows || '<tr class="empty-row"><td colspan="6">目前沒有會員資料</td></tr>';
+  el.querySelectorAll('tr[data-member]').forEach(function(tr){
+    tr.onclick = function(){ openDetail(tr.getAttribute('data-member')); };
   });
 }
 
@@ -383,10 +505,10 @@ function openDetail(memberId){
   html += '<div class="pct">整體完成 ' + c.done + ' / ' + c.total + '（' + pct + '%）</div>';
 
   if (graduated) {
-    html += '<div class="grad-done">🎓 已於 ' + esc(m.gradDate) + ' 出保溫箱畢業</div>';
+    html += '<div class="grad-done">已於 ' + esc(m.gradDate) + ' 出保溫箱畢業</div>';
   } else if (eligible) {
-    html += '<div class="grad-banner"><h3>🎉 已達成畢業條件（4 次培訓 ＋ 5 個一對一都完成了）</h3>' +
-            '<button class="btn" id="graduateBtn" data-member="' + esc(m.id) + '">🎓 標記出保溫箱畢業</button></div>';
+    html += '<div class="grad-banner"><h3>已達成畢業條件（4 次培訓 ＋ 5 個一對一都完成了）</h3>' +
+            '<button class="btn" id="graduateBtn" data-member="' + esc(m.id) + '">標記出保溫箱畢業</button></div>';
   }
 
   state.stages.forEach(function(stage){
@@ -410,7 +532,7 @@ function openDetail(memberId){
     html += '</div>';
   });
 
-  html += '<div class="danger-zone"><button id="deleteMemberBtn" data-member="' + esc(m.id) + '">🗑 刪除這位會員（建錯了才用）</button></div>';
+  html += '<div class="danger-zone"><button id="deleteMemberBtn" data-member="' + esc(m.id) + '">刪除這位會員（建錯了才用）</button></div>';
 
   document.getElementById('detailSheet').innerHTML = html;
   document.getElementById('detailOverlay').classList.remove('hidden');
@@ -442,6 +564,7 @@ function toggleItem(memberId, itemId){
       openDetail(memberId);
       var idx = state.members.findIndex(function(m){ return m.id === memberId; });
       if (idx >= 0) renderMemberListKeepScroll();
+      renderOverviewTable();
     })
     .catch(function(e){ alert('存檔失敗（網路或系統忙線）：' + e.message); })
     .finally(function(){ if (row) row.classList.remove('busy'); });
