@@ -237,7 +237,7 @@
   <div class="hero-badge"><span class="crest">華</span></div>
   <div class="kicker">BNI Hua Urban+ Renewal Chapter</div>
   <h1>新人保溫箱進度追蹤</h1>
-  <p>陪每一位新人完成 4 次培訓＋5 個一對一，一起出保溫箱</p>
+  <p>陪每一位新人完成 onboarding 三部曲，開心出保溫箱</p>
 </div>
 
 <div class="wrap">
@@ -454,7 +454,7 @@ function requiredItemIds(){
   state.stages.forEach(function(s){ stageTypeById[s.id] = s.type; });
   return state.items.filter(function(it){
     var t = stageTypeById[it.stageId];
-    return t === 'training' || t === 'oneonone';
+    return t === 'required';
   }).map(function(it){ return it.id; });
 }
 
@@ -582,7 +582,7 @@ function openDetail(memberId){
   if (graduated) {
     html += '<div class="grad-done">已於 ' + esc(m.gradDate) + ' 出保溫箱畢業</div>';
   } else if (eligible) {
-    html += '<div class="grad-banner"><h3>已達成畢業條件（4 次培訓 ＋ 5 個一對一都完成了）</h3>' +
+    html += '<div class="grad-banner"><h3>三部曲都完成了，可以出保溫箱進大群</h3>' +
             '<button class="btn" id="graduateBtn" data-member="' + esc(m.id) + '">標記出保溫箱畢業</button></div>';
   }
 
@@ -595,7 +595,7 @@ function openDetail(memberId){
     }).length;
     html += '<div class="stage">';
     html += '<div class="stage-head"><span>' + esc(stage.name) +
-            (stage.passportPage && stage.passportPage !== '—' ? '（護照 ' + esc(stage.passportPage) + '）' : '') +
+            (stage.passportPage && stage.passportPage !== '—' ? '（' + esc(stage.passportPage) + '）' : '') +
             '</span><span class="cnt">' + doneCnt + '/' + items.length + '</span></div>';
     items.forEach(function(it){
       var p = state.progress[m.id + '|' + it.id];
