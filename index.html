@@ -370,11 +370,27 @@ function apiGet(action){
   });
 }
 function apiPost(payload){
-  return fetch(GAS_EXEC_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(payload)
-  }).then(function(r){ return r.json(); });
+  // 與 apiGet 同樣要防冷啟動：不加重試與逾時的話，按下去會像完全沒反應。
+  // createMember 帶自產的 clientKey，後端據此擋掉重試造成的重複建檔。
+  if (payload.action === 'createMember' && !payload.clientKey) {
+    payload.clientKey = 'C' + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36);
+  }
+  return withRetry(function(){
+    return fetchWithTimeout(GAS_EXEC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    }).then(function(r){ return r.json(); });
+  });
+}
+// 送出期間鎖住按鈕並顯示狀態，避免使用者以為沒反應而重複點擊。
+function busy(btn, label){
+  if (!btn) return function(){};
+  var old = btn.innerHTML;
+  btn.disabled = true;
+  btn.style.opacity = '.6';
+  btn.innerHTML = label;
+  return function(){ btn.disabled = false; btn.style.opacity = ''; btn.innerHTML = old; };
 }
 
 // 兩個容器都要更新：桌機寬度時 #mainArea 被 CSS 隱藏，只寫它畫面上看不到。
@@ -672,12 +688,18 @@ document.getElementById('newMemberForm').onsubmit = function(e){
     document.getElementById('newMemberMsg').textContent = '姓名、負責導師、宣誓日期為必填';
     return;
   }
+  var msgEl = document.getElementById('newMemberMsg');
+  var restore = busy(e.target.querySelector('button[type=submit]'), '建立中…');
+  msgEl.textContent = '正在建立，系統剛喚醒時可能要等 10 到 20 秒…';
   apiPost(payload).then(function(res){
-    if (!res.ok) { document.getElementById('newMemberMsg').textContent = res.message; return; }
+    restore();
+    if (!res.ok) { msgEl.textContent = res.message; return; }
+    msgEl.textContent = '';
     document.getElementById('newMemberOverlay').classList.add('hidden');
     return loadAll();
-  }).catch(function(e){
-    document.getElementById('newMemberMsg').textContent = '建立失敗：' + e.message;
+  }).catch(function(err){
+    restore();
+    msgEl.textContent = '建立失敗：' + err.message + '（可以再按一次建立檢核表）';
   });
 };
 
