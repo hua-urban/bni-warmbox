@@ -198,6 +198,11 @@
           color:var(--bg);animation:checkPop 220ms var(--ease-out)}
   .item-label{font-size:14.5px;color:var(--ink);flex:1;min-width:0;overflow-wrap:break-word}
   .item-row.busy{opacity:.5}
+  .item-row{cursor:pointer}
+  .copy-post{flex:none;font-size:12px;padding:6px 11px;border:1px solid var(--line);border-radius:var(--radius-sm);
+             background:transparent;color:var(--gold);white-space:nowrap;font-weight:700}
+  .copy-post:hover{border-color:var(--gold-deep);background:var(--gold-tint-10)}
+  .copy-post.done{color:var(--gold-bright);border-color:var(--gold-bright)}
 
   @keyframes checkPop{0%{transform:scale(.6)}65%{transform:scale(1.12)}100%{transform:scale(1)}}
   @keyframes sheetUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
@@ -600,9 +605,11 @@ function openDetail(memberId){
     items.forEach(function(it){
       var p = state.progress[m.id + '|' + it.id];
       var on = !!(p && p.done);
-      html += '<button class="item-row" data-item="' + esc(it.id) + '" data-member="' + esc(m.id) + '">' +
+      html += '<div class="item-row" role="button" tabindex="0" data-item="' + esc(it.id) + '" data-member="' + esc(m.id) + '">' +
               '<span class="chk' + (on ? ' on' : '') + '">' + (on ? '✓' : '') + '</span>' +
-              '<span class="item-label">' + esc(it.label) + '</span></button>';
+              '<span class="item-label">' + esc(it.label) + '</span>' +
+              (it.post ? '<button type="button" class="copy-post" data-post="' + esc(it.post) + '">複製貼文</button>' : '') +
+              '</div>';
     });
     html += '</div>';
   });
@@ -613,12 +620,52 @@ function openDetail(memberId){
   document.getElementById('detailOverlay').classList.remove('hidden');
 
   document.querySelectorAll('#detailSheet .item-row').forEach(function(el){
-    el.onclick = function(){ toggleItem(el.getAttribute('data-member'), el.getAttribute('data-item')); };
+    var fire = function(ev){
+      if (ev && ev.target && ev.target.closest('.copy-post')) return; // 點到複製鈕不要順便勾選
+      toggleItem(el.getAttribute('data-member'), el.getAttribute('data-item'));
+    };
+    el.onclick = fire;
+    el.onkeydown = function(ev){
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); fire(ev); }
+    };
+  });
+  document.querySelectorAll('#detailSheet .copy-post').forEach(function(b){
+    b.onclick = function(ev){ ev.stopPropagation(); copyPost(b); };
   });
   var gradBtn = document.getElementById('graduateBtn');
   if (gradBtn) gradBtn.onclick = function(){ doGraduate(gradBtn.getAttribute('data-member')); };
   var delBtn = document.getElementById('deleteMemberBtn');
   if (delBtn) delBtn.onclick = function(){ doDeleteMember(delBtn.getAttribute('data-member'), m.name); };
+}
+
+// 罐頭貼文：一鍵複製，導師直接貼進 LINE。
+// LINE 內建瀏覽器與非 https 情境不一定有 navigator.clipboard，備援走 textarea + execCommand。
+function copyPost(btn){
+  var text = btn.getAttribute('data-post') || '';
+  var done = function(ok){
+    var old = btn.textContent;
+    btn.textContent = ok ? '已複製' : '複製失敗';
+    btn.classList.add('done');
+    setTimeout(function(){ btn.textContent = old; btn.classList.remove('done'); }, 1600);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function(){ done(true); }).catch(function(){ fallbackCopy(text, done); });
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+function fallbackCopy(text, done){
+  try {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    done(ok);
+  } catch (e) { done(false); }
 }
 
 function toggleItem(memberId, itemId){
