@@ -340,9 +340,33 @@ document.getElementById('changeIdentityBtn').onclick = function(){
   if (v && v.trim()) setIdentity(v.trim());
 };
 
+// Google Apps Script 冷啟動時偶發 404／逾時，且第一次呼叫可能要 10 秒以上。
+// 自動重試 2 次（間隔 1.5s / 3s），並設 25 秒逾時，避免畫面永遠停在「讀取中…」。
+function fetchWithTimeout(url, opts, ms){
+  return new Promise(function(resolve, reject){
+    var done = false;
+    var timer = setTimeout(function(){ if(!done){ done = true; reject(new Error('等太久沒有回應')); } }, ms || 25000);
+    fetch(url, opts).then(function(r){
+      if (done) return;
+      done = true; clearTimeout(timer);
+      if (!r.ok) { reject(new Error('伺服器回應 ' + r.status)); return; }
+      resolve(r);
+    }).catch(function(e){ if(!done){ done = true; clearTimeout(timer); reject(e); } });
+  });
+}
+function withRetry(fn, tries){
+  tries = tries || 3;
+  return fn().catch(function(e){
+    if (tries <= 1) throw e;
+    return new Promise(function(r){ setTimeout(r, (4 - tries) * 1500); })
+      .then(function(){ return withRetry(fn, tries - 1); });
+  });
+}
 function apiGet(action){
-  return fetch(GAS_EXEC_URL + '?action=' + encodeURIComponent(action) + '&_=' + Date.now(), { cache: 'no-store' })
-    .then(function(r){ return r.json(); });
+  return withRetry(function(){
+    return fetchWithTimeout(GAS_EXEC_URL + '?action=' + encodeURIComponent(action) + '&_=' + Date.now(), { cache: 'no-store' })
+      .then(function(r){ return r.json(); });
+  });
 }
 function apiPost(payload){
   return fetch(GAS_EXEC_URL, {
@@ -369,9 +393,17 @@ function loadAll(){
     renderMemberList();
     renderOverviewTable();
   }).catch(function(e){
+    // 桌機寬度時 #mainArea 被 CSS 隱藏，只更新它會讓畫面永遠停在「讀取中…」，
+    // 所以錯誤訊息與重試按鈕兩個容器都要寫。
+    var msg = '讀取失敗：' + esc(e.message);
     document.getElementById('mainArea').innerHTML =
-      '<div class="err-box">讀取失敗：' + esc(e.message) + '<br><button class="btn btn-outline" id="retryBtn">重新讀取</button></div>';
-    document.getElementById('retryBtn').onclick = loadAll;
+      '<div class="err-box">' + msg + '<br><button class="btn btn-outline retryBtn">重新讀取</button></div>';
+    var ov = document.getElementById('overviewTable');
+    if (ov) {
+      ov.innerHTML = '<tr class="empty-row"><td colspan="6">' + msg +
+        '　<button class="btn btn-outline retryBtn">重新讀取</button></td></tr>';
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('.retryBtn'), function(b){ b.onclick = loadAll; });
   });
 }
 
