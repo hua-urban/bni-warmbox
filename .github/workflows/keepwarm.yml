@@ -1,0 +1,38 @@
+name: 保溫
+
+# Google Apps Script 的 web app 閒置一段時間後會被回收，
+# 下一位使用者開頁就要等 10～20 秒（實測首次呼叫甚至直接回 404 再由前端重試救回）。
+# 這支排程在分會夥伴可能會用到的時段固定去戳一下，讓它保持醒著。
+# 保溫失敗不算 CI 失敗（Google 端偶發錯誤是常態，不需要每次都寄信吵人）。
+
+on:
+  schedule:
+    # cron 是 UTC。台北 = UTC+8，以下涵蓋台北 06:00–23:59，每 10 分鐘一次。
+    - cron: '*/10 22-23 * * *'   # 台北 06:00–07:59
+    - cron: '*/10 0-15 * * *'    # 台北 08:00–23:59
+  workflow_dispatch:
+
+concurrency:
+  group: keepwarm
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 叫醒後端
+        env:
+          EXEC_URL: https://script.google.com/macros/s/AKfycbwyWw0XtpBck_v_rQuPAAZ8n0wYN2HciZr5a4S7g-QAPMrOXSS-HehPVeyhVoMtedM/exec
+        run: |
+          for i in 1 2 3; do
+            code=$(curl -sL -o /dev/null --max-time 60 -w "%{http_code}" "$EXEC_URL?action=roster&_=$RANDOM" || echo "000")
+            echo "第 $i 次：HTTP $code"
+            if [ "$code" = "200" ]; then
+              echo "後端已就緒"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "三次都沒叫醒，這次跳過（不視為失敗）"
+          exit 0

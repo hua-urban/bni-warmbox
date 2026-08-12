@@ -670,6 +670,8 @@ function doDeleteMember(memberId, name){
 
 // 新增會員
 document.getElementById('newMemberBtn').onclick = function(){
+  // 預熱：使用者還在填表單的這幾十秒先把後端叫醒，按下建立時就不必等冷啟動。
+  fetch(GAS_EXEC_URL + '?action=roster&_warm=' + Date.now(), { cache: 'no-store' }).catch(function(){});
   document.getElementById('newMemberForm').reset();
   document.getElementById('fOathDate').value = new Date().toISOString().slice(0,10);
   document.getElementById('newMemberMsg').textContent = '';
