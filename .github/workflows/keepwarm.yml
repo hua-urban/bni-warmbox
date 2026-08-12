@@ -25,9 +25,14 @@ jobs:
         env:
           EXEC_URL: https://script.google.com/macros/s/AKfycbwyWw0XtpBck_v_rQuPAAZ8n0wYN2HciZr5a4S7g-QAPMrOXSS-HehPVeyhVoMtedM/exec
         run: |
+          # 順便把每次的回應時間記進 job summary，累積成穩定度紀錄，
+          # 用來判斷「獨立式 GAS 專案是否需要改成綁定式」。
           for i in 1 2 3; do
-            code=$(curl -sL -o /dev/null --max-time 60 -w "%{http_code}" "$EXEC_URL?action=roster&_=$RANDOM" || echo "000")
-            echo "第 $i 次：HTTP $code"
+            out=$(curl -sL -o /dev/null --max-time 60 -w "%{http_code} %{time_total}" "$EXEC_URL?action=roster&_=$RANDOM" || echo "000 0")
+            code=$(echo "$out" | cut -d' ' -f1)
+            secs=$(echo "$out" | cut -d' ' -f2)
+            echo "第 $i 次：HTTP $code，耗時 ${secs}s"
+            echo "$(date -u '+%Y-%m-%d %H:%M UTC') | 第 $i 次 | HTTP $code | ${secs}s" >> "$GITHUB_STEP_SUMMARY"
             if [ "$code" = "200" ]; then
               echo "後端已就緒"
               exit 0
