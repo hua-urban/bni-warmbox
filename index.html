@@ -753,8 +753,26 @@ document.getElementById('newMemberForm').onsubmit = function(e){
 };
 
 // 關閉 modal
-document.querySelectorAll('[data-close]').forEach(function(el){
-  el.onclick = function(){ document.getElementById(el.getAttribute('data-close')).classList.add('hidden'); };
+// 用委派而非逐一綁定：明細視窗的 ✕ 是 openDetail 動態產生的，
+// 頁面載入時還不存在，直接 querySelectorAll 綁不到，會導致關不掉、整頁被遮罩卡住。
+document.addEventListener('click', function(ev){
+  var trigger = ev.target.closest('[data-close]');
+  if (trigger) {
+    var el = document.getElementById(trigger.getAttribute('data-close'));
+    if (el) el.classList.add('hidden');
+    return;
+  }
+  // 點遮罩空白處也關閉（只認遮罩本身，點到內容不關）
+  if (ev.target.classList.contains('overlay')) ev.target.classList.add('hidden');
+});
+// Esc 關掉最上層的 modal，避免使用者被困在遮罩裡
+document.addEventListener('keydown', function(ev){
+  if (ev.key !== 'Escape') return;
+  var open = Array.prototype.filter.call(
+    document.querySelectorAll('.overlay'),
+    function(o){ return !o.classList.contains('hidden'); }
+  );
+  if (open.length) open[open.length - 1].classList.add('hidden');
 });
 
 // 匯出報表（前端直接從目前資料產生 CSV，不額外開後端端點）
